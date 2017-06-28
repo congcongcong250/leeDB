@@ -26,10 +26,10 @@ gcc   gendata.o query.o page.o reln.o tuple.o util.o chvec.o hash.o bits.o   -o 
 ```
 
 ## Instruction
-### ```create``` command
+### `create` command
 `./create [Relation_Name] [Num_of_Attributes] [Initial_Num_of_Page] "[Choice_Vector]"`
 
-Create multi-attribute linear-hashed (MALH) files, by accepting four command line arguments:
+Create multi-attribute linear-hashed (MALH) files, with four command line arguments:
 - the name of the relation
 - the number of attributes
 - the initial number of data pages (rounded up to nearest 2n)
@@ -44,7 +44,59 @@ The following example of using create makes a table called ‘new_relation’ wi
 
 `$ ./create  new_relation  4  6  "0,5:0,1:1,10:1,1:2,0:3:12"`
 
-- Choice vector is a 32-bits binary vector for each tuple, constructed by bits from hash value of attributes in this tuple. It is used for Multihashing and Linear hashing. For example, "2,5" implies *one Choice Vector bit* is assigned from the *6th* bits* (5 for index) of *hash value* of the *3st (2 for index) attribute* of this tuple. `pseudocode: tuple->vector[0] = hash(tuple->attribute[2])[5]`
+Choice vector is a 32-entries binary vector for each tuple, indicating the tuple's [Multihashing](#multihash) value.
+### `insert` command
+`$ ./gendata [Num_of_Generated_Tuple] [Num_of_Attributes] [Start_Index] | ./insert [Relation_Name]`
+
+Insert command is used to insert tuples from stdin. For testing purpose, command `gendata` is introduced to generate bulk of tuples to stdout, in which case a pipeline command could insert tuples into relation.
+
+E.G.
+```
+$ ./gendata  5 3 11
+11,sandwich,pocket
+12,circus,spectrum
+13,snail,adult
+14,crystal,fungus
+15,bowl,surveyor
+```
+
+`./gendata 250 3 101 | ./insert new_relation`
+
+### `select` command
+`./select [Relation_Name] [Tuple_Query]`
+
+Select the tuples matching the tuple query. A query including all attributes in a tuple formated as "val1,val2,...,valn", where some of the vali can be '?' (without the quotes) for ambiguous search.
+
+Selection will use Choice vector of query tuple and Multihashing to search only matched pages (including overflow).
+
+E.G.
+`$ ./select new_relation 10,?,apple`
+
+### `stats` command
+`$ ./stats [Relation_Name]`
+
+Stats command is used to check the stats of a relation. When Linear hash happens, page pool will extend. Stats is a good command to check if the linear hash happen in righ time and right way. 
+```
+$ ./stats new_relation
+Global Info:
+#attrs:3  #pages:4  #tuples:251  d:2  sp:0
+Choice vector
+0,0:0,1:0,2:1,0:1,1:2,0:0,31:1,31:2,31:0,30:1,30:2,30:0,29:1,29:2,29:0,28:1,28:2,28:
+0,27:1,27:2,27:0,26:1,26:2,26:0,25:1,25:2,25:0,24:1,24:2,24:0,23:1,23
+Bucket Info:
+#   Info on pages in bucket
+    (pageID,#tuples,freebytes,ovflow)
+0   (d0,57,7,0) -> (ov0,14,757,-1)
+1   (d1,57,8,3) -> (ov3,2,971,-1)
+2   (d2,57,1,1) -> (ov1,4,946,-1)
+3   (d3,58,3,2) -> (ov2,2,975,-1)
+```
+## Multihashing<a name="multihash "></a>
+Multihashing is a algorithm to mapping tuple to a specified page in `insert` operation. The page works as a bucket with a common index (page id). All tuples inside of a page (bucket) have a hash value, whose first several bits indicates the id of the page.
+
+### Construct tuple hash value
+Tuple hash value is constructed by choice vector. It is a 32-entries binary vector for each tuple, indicating the tuple hash value bit by bit from attributes hash value in this tuple. For example, a entry "2,5" implies **one tuple hash bit** is assigned from the **6th bits (index 5)** of **hash value** of the **3rd (index 2) attribute** in this tuple. 
+`pseudocode: tuple->hash[0] = hash(tuple->attribute[2])[5]`
 
 The vector "0,5:0,1:1,10:1,1:2,0:3:12" above explicit assigns the value of first 5 bits in the choice vector. 
 
@@ -54,15 +106,3 @@ The vector "0,5:0,1:1,10:1,1:2,0:3:12" above explicit assigns the value of first
 |Index in hash(attr) | 5 | 1 |10 | 0 |12 |
 
 For the rest 32 - 5 = 27 bits, database will implicitly automatically generate the mapping.
-
-### ```insert``` command
-```
-
-
-./gendata [Num_of_Generated_Tuple] [Num_of_Attributes] 
-
-./stats [Relation_Name]
-af
-./select [Relation_Name] ?,?,?,?
-```*
-
