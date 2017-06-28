@@ -33,8 +33,11 @@ Create multi-attribute linear-hashed (MALH) files, by accepting four command lin
 - the initial number of data pages (rounded up to nearest 2n)
 - the multi-attribute hashing choice vector
 The will give one relation/table, which is a analogous to an SQL command like:
+<br>
 `create table R ( a1 text, a2 text, ... an text );`
+<br>
 E.G.
+<br>
 `$ ./create  abc  4  6  "0,0:0,1:1,0:1,1:2:0:3:0"`
 ```
 ./create [Relation_Name] [Num_of_Attributes] [Initial_Num_of_Page] "[Choice_Vector]"
@@ -45,4 +48,4 @@ E.G.
 af
 ./select [Relation_Name] ?,?,?,?
 ```
-asd
+
