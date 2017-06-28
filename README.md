@@ -92,13 +92,14 @@ Bucket Info:
 3   (d3,58,3,2) -> (ov2,2,975,-1)
 ```
 ## Multihashing<a name="multihash "></a>
-Multihashing is a algorithm to mapping tuple to a specified page in `insert` operation. The page works as a bucket with a common index (page id). All tuples inside of a page (bucket) have a hash value, whose first several bits indicates the id of the page.
+Multihashing is a algorithm to increase query performance for database. It maps tuple to a specified page in `insert` operation. The page works as a bucket with a common index (page id). All tuples inside of a page (bucket) have a hash value, whose first several bits indicates the id of the page.
 
 ### Construct tuple hash value
-Tuple hash value is constructed by choice vector. It is a 32-entries binary vector for each tuple, indicating the tuple hash value bit by bit from attributes hash value in this tuple. For example, a entry "2,5" implies **one tuple hash bit** is assigned from the **6th bits (index 5)** of **hash value** of the **3rd (index 2) attribute** in this tuple. 
+Tuple hash value is constructed by choice vector. It is a 32-entries binary vector for each relation(table), indicating the tuple hash value bit by bit from attributes hash value in this tuple. For example, a entry "2,5" implies **one tuple hash bit** is assigned from the **6th bits(index 5)** of **hash value** of the **3rd(index 2) attribute** in this tuple. 
+
 `pseudocode: tuple->hash[0] = hash(tuple->attribute[2])[5]`
 
-The vector "0,5:0,1:1,10:1,1:2,0:3:12" above explicit assigns the value of first 5 bits in the choice vector. 
+The vector "0,5:0,1:1,10:1,1:2,0:3:12" from example above explicitly assigns the value of first 5 bits in a choice vector. 
 
 |Bit in Choice Vector| 0 | 1 | 2 | 3 | 4 |
 |--------------------|---|---|---|---|---|
@@ -106,3 +107,9 @@ The vector "0,5:0,1:1,10:1,1:2,0:3:12" above explicit assigns the value of first
 |Index in hash(attr) | 5 | 1 |10 | 0 |12 |
 
 For the rest 32 - 5 = 27 bits, database will implicitly automatically generate the mapping.
+### Insertion with Multihashing
+For each tuple, we pick the lower several bits as its page index. Numbers of bits is determined by base 2 exponent on number of pages. If there are 8 pages, we take 3 bits. In insertion tuples will only go into the page with id matching its index bits.
+### Query with Multihashing
+Multihashing makes every page as a bucket for tuples with same index bits. That makes bucket search possible on query operation. When a tuple comes in, its multihash value will be calculated first and the database only need to search for the mapping page based on index bits, or pages if there is no quote for attributes.
+## Linear hashing
+Linear hashing is another important algorithm for this database. 
