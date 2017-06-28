@@ -125,14 +125,14 @@ Linear hashing is another important algorithm for this database. It is an algori
 Say there are 4 pages currently, tuples lower 2 bits are taken as index bits, and it just reaches 20 insertions. Split pointer is still at initial value 0. The database will split 1st page(index bits '00') to 1st page(index bits '000') and 5th page(index bits '100') by extends the size of index bits. Every tuple in 1st page will be taken index from lower 3 bits instead of 2 bits. Tuples with index '000' stays in 1st page and '100' will go to 5th page.
 
 Pages of relation BEFORE split
-|   |'00'|'01'|'10'|'11'|
-|---|---|---|---|---|
+|Index bits|'00'|'01'|'10'|'11'|
+|----------|----|----|----|----|
 |page|full|half|full|full|
 |overflow|full|N/A|half|half|
 |overflow|half|N/A|N/A|N/A|
 
 Pages of relation AFTER split
-|   |'000'|'01'|'10'|'11'|'100'|
+|Index bits|'000'|'01'|'10'|'11'|'100'|
 |---|---|---|---|---|---|
 |page|full|half|full|full|half|
 |overflow|half|N/A|half|half|N/A|
