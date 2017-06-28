@@ -34,7 +34,7 @@ gcc   gendata.o query.o page.o reln.o tuple.o util.o chvec.o hash.o bits.o   -o 
 ```
 
 ## <a id="2"></a>Instruction<a id="2"></a>
-### `create` command
+### <a id="3"></a>`create` command
 `./create [Relation_Name] [Num_of_Attributes] [Initial_Num_of_Page] "[Choice_Vector]"`
 
 Create multi-attribute linear-hashed (MALH) files, with four command line arguments:
@@ -53,7 +53,7 @@ The following example of using create makes a table called ‘new_relation’ wi
 `$ ./create  new_relation  4  6  "0,5:0,1:1,10:1,1:2,0:3:12"`
 
 Choice vector is a 32-entries binary vector for each tuple, indicating the tuple's [Multihashing](#multihashing) value.
-### `insert` command
+### <a id="4"></a>`insert` command
 `$ ./gendata [Num_of_Generated_Tuple] [Num_of_Attributes] [Start_Index] | ./insert [Relation_Name]`
 
 Insert command is used to insert tuples from stdin. For testing purpose, command `gendata` is introduced to generate bulk of tuples to stdout, in which case a pipeline command could insert tuples into relation.
@@ -70,7 +70,7 @@ $ ./gendata  5 3 11
 
 `./gendata 250 3 101 | ./insert new_relation`
 
-### `select` command
+### <a id="5"></a>`select` command
 `./select [Relation_Name] [Tuple_Query]`
 
 Select the tuples matching the tuple query. A query including all attributes in a tuple formated as "val1,val2,...,valn", where some of the vali can be '?' (without the quotes) for ambiguous search.
@@ -80,7 +80,7 @@ Selection will use Choice vector of query tuple and Multihashing to search only 
 E.G.
 `$ ./select new_relation 10,?,apple`
 
-### `stats` command
+### <a id="6"></a>`stats` command
 `$ ./stats [Relation_Name]`
 
 Stats command is used to check the stats of a relation. When Linear hash happens, page pool will extend. Stats is a good command to check if the linear hash happen in righ time and right way. 
@@ -100,7 +100,7 @@ Bucket Info:
 3   (d3,58,3,2) -> (ov2,2,975,-1)
 ```
 ## Multihashing
-Multihashing is a algorithm to increase query performance for database. It maps tuple to a specified page in `insert` operation. The page works as a bucket with a common index (page id). All tuples inside of a page (bucket) have a hash value, whose first several bits indicates the id of the page.
+Multihashing is an algorithm to increase query performance for database. It maps tuple to a specified page in `insert` operation. The page works as a bucket with a common index (page id). All tuples inside of a page (bucket) have a hash value, whose first several bits indicates the id of the page.
 
 ### Construct tuple hash value
 Tuple hash value is constructed by choice vector. It is a 32-entries binary vector for each relation(table), indicating the tuple hash value bit by bit from attributes hash value in this tuple. For example, a entry "2,5" implies **one tuple hash bit** is assigned from the **6th bits(index 5)** of **hash value** of the **3rd(index 2) attribute** in this tuple. 
@@ -116,8 +116,28 @@ The vector "0,5:0,1:1,10:1,1:2,0:3:12" from example above explicitly assigns the
 
 For the rest 32 - 5 = 27 bits, database will implicitly automatically generate the mapping.
 ### Insertion with Multihashing
-For each tuple, we pick the lower several bits as its page index. Numbers of bits is determined by base 2 exponent on number of pages. If there are 8 pages, we take 3 bits. In insertion tuples will only go into the page with id matching its index bits.
+For each tuple, we pick the lower several bits as its page index. Numbers of bits is determined by base 2 exponent on number of pages. If there are 8 pages, we take 3 bits, and "010" means this tuple will go to 3rd page(index 2). In insertion tuples will only go into the page with id matching its index bits.
 ### Query with Multihashing
 Multihashing makes every page as a bucket for tuples with same index bits. That makes bucket search possible on query operation. When a tuple comes in, its multihash value will be calculated first and the database only need to search for the mapping page based on index bits, or pages if there is no quote for attributes.
-## Linear hashing
-Linear hashing is another important algorithm for this database. 
+## <a id="7"></a>Linear hashing
+Linear hashing is another important algorithm for this database. It is an algorithm to reduce overflow for each page(bucket) by split pages one by one triggerred by certain circumstance. The process is like extending an array when its full, where "getting full" is the trigger circumstance. The split loop through pages by a counter called "split pointer".
+
+Say there are 4 pages currently, tuples lower 2 bits are taken as index bits, and it just reaches 20 insertions. Split pointer is still at initial value 0. The database will split 1st page(index bits '00') to 1st page(index bits '000') and 5th page(index bits '100') by extends the size of index bits. Every tuple in 1st page will be taken index from lower 3 bits instead of 2 bits. Tuples with index '000' stays in 1st page and '100' will go to 5th page.
+
+Pages of relation BEFORE split
+|   |'00'|'01'|'10'|'11'|
+|---|---|---|---|---|
+|page|full|half|full|full|
+|overflow|full|N/A|half|half|
+|overflow|half|N/A|N/A|N/A|
+
+Pages of relation AFTER split
+|   |'000'|'01'|'10'|'11'|'100'|
+|---|---|---|---|---|---|
+|page|full|half|full|full|half|
+|overflow|half|N/A|half|half|N/A|
+|overflow|N/A|N/A|N/A|N/A|N/A|
+
+After f pages 0,1,2,3 splited, split pointer will be reset to 0 and loop through 8 pages again. In this case, "20 insertions" is set as the trigger.
+
+With linear hashing, non of the page will have too much overflow so that the nested loop in bucket search would be small.
