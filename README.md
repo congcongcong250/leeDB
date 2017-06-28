@@ -8,7 +8,7 @@
     - [stats](#6)
 - [Multihashing](#multihashing)
 - [Linear hashing](#7)
-## Set up<a id="1"></a>
+## <a id="1"></a>Set up
 
 Copy all files to a folder
 ```
@@ -33,7 +33,7 @@ gcc -Wall -Werror -g   -c -o gendata.o gendata.c
 gcc   gendata.o query.o page.o reln.o tuple.o util.o chvec.o hash.o bits.o   -o gendata
 ```
 
-## Instruction<a id="2"></a>
+## <a id="2"></a>Instruction<a id="2"></a>
 ### `create` command
 `./create [Relation_Name] [Num_of_Attributes] [Initial_Num_of_Page] "[Choice_Vector]"`
 
