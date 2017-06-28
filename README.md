@@ -1,6 +1,14 @@
 # leeDB, a C based efficient data management system
-
-## Set up
+## Table of Content
+- [Set Up](#1)
+- [Instruction](#2)
+    - [create](#3)
+    - [insert](#4)
+    - [select](#5)
+    - [stats](#6)
+- [Multihashing](#multihashing)
+- [Linear hashing](#7)
+## Set up<a id="1"></a>
 
 Copy all files to a folder
 ```
@@ -25,7 +33,7 @@ gcc -Wall -Werror -g   -c -o gendata.o gendata.c
 gcc   gendata.o query.o page.o reln.o tuple.o util.o chvec.o hash.o bits.o   -o gendata
 ```
 
-## Instruction
+## Instruction<a id="2"></a>
 ### `create` command
 `./create [Relation_Name] [Num_of_Attributes] [Initial_Num_of_Page] "[Choice_Vector]"`
 
@@ -44,7 +52,7 @@ The following example of using create makes a table called ‘new_relation’ wi
 
 `$ ./create  new_relation  4  6  "0,5:0,1:1,10:1,1:2,0:3:12"`
 
-Choice vector is a 32-entries binary vector for each tuple, indicating the tuple's [Multihashing](#multihash) value.
+Choice vector is a 32-entries binary vector for each tuple, indicating the tuple's [Multihashing](#multihashing) value.
 ### `insert` command
 `$ ./gendata [Num_of_Generated_Tuple] [Num_of_Attributes] [Start_Index] | ./insert [Relation_Name]`
 
@@ -91,7 +99,7 @@ Bucket Info:
 2   (d2,57,1,1) -> (ov1,4,946,-1)
 3   (d3,58,3,2) -> (ov2,2,975,-1)
 ```
-## Multihashing<a name="multihash "></a>
+## Multihashing
 Multihashing is a algorithm to increase query performance for database. It maps tuple to a specified page in `insert` operation. The page works as a bucket with a common index (page id). All tuples inside of a page (bucket) have a hash value, whose first several bits indicates the id of the page.
 
 ### Construct tuple hash value
