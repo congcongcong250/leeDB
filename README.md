@@ -127,16 +127,16 @@ Say there are 4 pages currently, tuples lower 2 bits are taken as index bits, an
 Pages of relation BEFORE split
 |Index bits|'00'|'01'|'10'|'11'|
 |----------|----|----|----|----|
-|page|full|half|full|full|
-|overflow|full|N/A|half|half|
-|overflow|half|N/A|N/A|N/A|
+|Page      |full|half|full|full|
+|Overflow  |full|N/A |half|half|
+|Overflow  |half|N/A |N/A |N/A |
 
 Pages of relation AFTER split
 |Index bits|'000'|'01'|'10'|'11'|'100'|
-|---|---|---|---|---|---|
-|page|full|half|full|full|half|
-|overflow|half|N/A|half|half|N/A|
-|overflow|N/A|N/A|N/A|N/A|N/A|
+|----------|-----|----|----|----|-----|
+|Page      |full |half|full|full|half |
+|Overflow  |half |N/A |half|half|N/A  |
+|Overflow  |N/A  |N/A |N/A |N/A |N/A  |
 
 After f pages 0,1,2,3 splited, split pointer will be reset to 0 and loop through 8 pages again. In this case, "20 insertions" is set as the trigger.
 
